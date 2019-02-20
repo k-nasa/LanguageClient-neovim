@@ -1,6 +1,5 @@
 use super::*;
 use crate::types::{Call, RawMessage};
-use crate::vim;
 
 #[derive(Clone, Serialize)]
 pub struct RpcClient {
