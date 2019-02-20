@@ -1,5 +1,5 @@
 use super::*;
-use crate::types::Call;
+use crate::types::{Call, RawMessage};
 use crate::vim;
 
 #[derive(Clone, Serialize)]
@@ -94,13 +94,13 @@ impl RpcClient {
                         // TODO: cleanup.
                         let message = message.unwrap();
                         match message {
-                            vim::RawMessage::MethodCall(method_call) => {
+                            RawMessage::MethodCall(method_call) => {
                                 sink.send(Call::MethodCall(languageId.clone(), method_call))?;
                             }
-                            vim::RawMessage::Notification(notification) => {
+                            RawMessage::Notification(notification) => {
                                 sink.send(Call::Notification(languageId.clone(), notification))?;
                             }
-                            vim::RawMessage::Output(output) => {
+                            RawMessage::Output(output) => {
                                 while let Ok((id, tx)) = rx.try_recv() {
                                     pending_outputs.insert(id, tx);
                                 }
@@ -208,12 +208,12 @@ impl RpcClient {
 
     pub fn output(&self, id: Id, result: Fallible<impl Serialize>) -> Fallible<()> {
         let output = match result {
-            Ok(ok) => vim::RawMessage::Output(rpc::Output::Success(rpc::Success {
+            Ok(ok) => RawMessage::Output(rpc::Output::Success(rpc::Success {
                 jsonrpc: Some(rpc::Version::V2),
                 id: rpc::Id::Num(id),
                 result: serde_json::to_value(ok)?,
             })),
-            Err(err) => vim::RawMessage::Output(rpc::Output::Failure(rpc::Failure {
+            Err(err) => RawMessage::Output(rpc::Output::Failure(rpc::Failure {
                 jsonrpc: Some(rpc::Version::V2),
                 id: rpc::Id::Num(id),
                 error: err.to_rpc_error(),
